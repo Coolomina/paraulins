@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ child.name }} - Family Voices</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('web.index') }}">
+                <i class="fas fa-microphone me-2"></i>Family Voices
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('web.index') }}">
+                    <i class="fas fa-home me-1"></i>Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-child fa-2x text-primary me-3"></i>
+                    <div>
+                        <h1>{{ child.name }}'s Words</h1>
+                        <p class="text-muted mb-0">{{ child.words|length }} words recorded</p>
+                    </div>
+                    <div class="ms-auto">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addWordModal">
+                            <i class="fas fa-plus me-2"></i>Add Word
+                        </button>
+                    </div>
+                </div>
+
+                {% if child.words %}
+                    <div class="row">
+                        {% for word in child.words %}
+                            <div class="col-lg-4 col-md-6 mb-4">
+                                <div class="card h-100 shadow-sm word-card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start mb-3">
+                                            {% if word.image_filename %}
+                                                <img src="{{ url_for('api.serve_image', filename=word.image_filename) }}" 
+                                                     class="word-image me-3" alt="{{ word.text }}">
+                                            {% else %}
+                                                <div class="word-image-placeholder me-3">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div class="flex-grow-1">
+                                                <h5 class="card-title">{{ word.text }}</h5>
+                                                <small class="text-muted">{{ word.recordings|length }} recordings</small>
+                                            </div>
+                                        </div>
+
+                                        {% if word.recordings %}
+                                            <div class="recordings-section">
+                                                <h6 class="text-muted mb-2">Years:</h6>
+                                                <div class="year-buttons">
+                                                    {% for recording in word.recordings|sort(attribute='year') %}
+                                                        <button class="btn btn-outline-primary btn-sm me-2 mb-2 play-btn" 
+                                                                data-child="{{ child.name }}" 
+                                                                data-word="{{ word.text }}" 
+                                                                data-year="{{ recording.year }}"
+                                                                data-filename="{{ recording.filename }}">
+                                                            <i class="fas fa-play me-1"></i>{{ recording.year }}
+                                                        </button>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <p class="text-muted">No recordings yet</p>
+                                        {% endif %}
+
+                                        <div class="mt-3">
+                                            <button class="btn btn-success btn-sm me-2" 
+                                                    onclick="showAddRecordingModal('{{ word.text }}')">
+                                                <i class="fas fa-microphone me-1"></i>Add Recording
+                                            </button>
+                                            <button class="btn btn-info btn-sm" 
+                                                    onclick="showAddImageModal('{{ word.text }}')">
+                                                <i class="fas fa-image me-1"></i>Add Image
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-comment fa-5x text-muted mb-4"></i>
+                        <h3>No words added yet</h3>
+                        <p class="text-muted">Start by adding the first word for {{ child.name }}</p>
+                        <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#addWordModal">
+                            <i class="fas fa-plus me-2"></i>Add First Word
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Word Modal -->
+    <div class="modal fade" id="addWordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Word</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addWordForm">
+                        <div class="mb-3">
+                            <label for="wordText" class="form-label">Word</label>
+                            <input type="text" class="form-control" id="wordText" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addWord('{{ child.name }}')">Add Word</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Recording Modal -->
+    <div class="modal fade" id="addRecordingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Recording</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRecordingForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="recordingYear" class="form-label">Year</label>
+                            <input type="number" class="form-control" id="recordingYear" min="2000" max="2030" value="2025" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="recordingFile" class="form-label">Audio File</label>
+                            <input type="file" class="form-control" id="recordingFile" accept=".mp3,.wav,.ogg,.m4a" required>
+                            <div class="form-text">Supported formats: MP3, WAV, OGG, M4A (max 10MB)</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addRecording('{{ child.name }}')">Upload Recording</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Image Modal -->
+    <div class="modal fade" id="addImageModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Image</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addImageForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="imageFile" class="form-label">Image File</label>
+                            <input type="file" class="form-control" id="imageFile" accept=".jpg,.jpeg,.png,.gif" required>
+                            <div class="form-text">Supported formats: JPG, PNG, GIF (max 5MB)</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addImage('{{ child.name }}')">Upload Image</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Player (hidden) -->
+    <audio id="audioPlayer" style="display: none;"></audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        let currentWord = '';
+        
+        function showAddRecordingModal(wordText) {
+            currentWord = wordText;
+            document.getElementById('addRecordingModal').querySelector('.modal-title').textContent = `Add Recording for "${wordText}"`;
+            new bootstrap.Modal(document.getElementById('addRecordingModal')).show();
+        }
+        
+        function showAddImageModal(wordText) {
+            currentWord = wordText;
+            document.getElementById('addImageModal').querySelector('.modal-title').textContent = `Add Image for "${wordText}"`;
+            new bootstrap.Modal(document.getElementById('addImageModal')).show();
+        }
+    </script>
+</body>
+</html>
