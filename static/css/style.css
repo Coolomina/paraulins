@@ -138,6 +138,54 @@ body {
     100% { transform: rotate(360deg); }
 }
 
+/* Audio Recording Styles */
+.recording-method-section {
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #ffffff;
+}
+
+.recording-active {
+    animation: recordingPulse 2s infinite;
+}
+
+@keyframes recordingPulse {
+    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+.btn-check:focus + .btn, .btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-check:checked + .btn {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+
+#recordingStatus {
+    border-left: 4px solid #0dcaf0;
+}
+
+#recordingStatus.recording {
+    border-left-color: #dc3545;
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+#recordingStatus.ready {
+    border-left-color: #198754;
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+#recordingPreview {
+    border-radius: 6px;
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
     .word-image {

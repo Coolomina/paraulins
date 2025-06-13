@@ -6,9 +6,26 @@ A webapp to track and listen to the evolution of your children's pronunciation o
 
 - Select between your two daughters
 - Manage words for each child with audio recordings by year
+- **Browser-based recording**: Record directly in your browser with microphone access
+- **File upload option**: Upload pre-recorded audio files
 - Attach images to words for easy recognition
 - Play audio recordings organized by year
 - File-based storage (no database required)
+
+### Recording Options
+
+The app provides two convenient ways to add audio recordings:
+
+1. **Record Now**: Click the microphone button to record directly in your browser
+   - Automatically requests microphone permission
+   - Visual recording timer with progress bar
+   - 60-second maximum recording time
+   - Preview and re-record functionality
+   - Supports multiple audio formats (WebM, OGG, MP4)
+
+2. **Upload File**: Upload pre-recorded audio files
+   - Supports MP3, WAV, OGG, M4A, and WebM formats
+   - Maximum file size: 10MB
 
 ## Quick Start
 

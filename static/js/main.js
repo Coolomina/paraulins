@@ -134,57 +134,10 @@ async function addWord(childName) {
     }
 }
 
-// Recording management
+// Recording management (legacy function for backward compatibility)
 async function addRecording(childName) {
-    const yearInput = document.getElementById('recordingYear');
-    const fileInput = document.getElementById('recordingFile');
-    
-    const year = parseInt(yearInput.value);
-    const file = fileInput.files[0];
-    
-    if (!year || year < 2000 || year > 2030) {
-        showAlert('Please enter a valid year', 'warning');
-        return;
-    }
-    
-    if (!file) {
-        showAlert('Please select an audio file', 'warning');
-        return;
-    }
-    
-    const addButton = document.querySelector('#addRecordingModal .btn-primary');
-    setButtonLoading(addButton);
-    
-    try {
-        const formData = new FormData();
-        formData.append('audio', file);
-        formData.append('year', year.toString());
-        
-        const response = await fetch(`/api/children/${encodeURIComponent(childName)}/words/${encodeURIComponent(currentWord)}/recordings`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Upload failed');
-        }
-        
-        showAlert(`Recording for ${year} has been uploaded successfully!`, 'success');
-        
-        // Close modal and reset form
-        bootstrap.Modal.getInstance(document.getElementById('addRecordingModal')).hide();
-        yearInput.value = '2025';
-        fileInput.value = '';
-        
-        // Reload page to show new recording
-        setTimeout(() => window.location.reload(), 1000);
-        
-    } catch (error) {
-        showAlert(`Failed to upload recording: ${error.message}`, 'danger');
-    } finally {
-        setButtonLoading(addButton, false);
-    }
+    // This function is now handled by saveRecording
+    await saveRecording(childName);
 }
 
 // Image management
@@ -290,6 +243,11 @@ function playAudio(childName, wordText, year, filename) {
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize recording modal if it exists
+    if (document.getElementById('addRecordingModal')) {
+        initializeRecordingModal();
+    }
+    
     // Add click listeners to play buttons
     document.addEventListener('click', function(event) {
         if (event.target.closest('.play-btn')) {
@@ -337,5 +295,567 @@ document.addEventListener('DOMContentLoaded', function() {
         if (input) {
             input.focus();
         }
+        
+        // Reset recording modal when shown
+        if (modal.id === 'addRecordingModal') {
+            resetRecordingModal();
+        }
+    });
+
+    // Clean up audio recorder when modal is hidden
+    document.addEventListener('hidden.bs.modal', function(event) {
+        const modal = event.target;
+        if (modal.id === 'addRecordingModal' && audioRecorder) {
+            audioRecorder.cleanup();
+        }
     });
 });
+
+// Audio Recording functionality
+class AudioRecorder {
+    constructor() {
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.recordedBlob = null;
+        this.stream = null;
+        this.startTime = null;
+        this.timerInterval = null;
+        this.maxRecordingTime = 60000; // 60 seconds in milliseconds
+        this.autoStopTimeout = null;
+    }
+
+    async requestPermission() {
+        try {
+            // Show permission request message
+            const permissionAlert = document.getElementById('permissionAlert');
+            const permissionMessage = document.getElementById('permissionMessage');
+            
+            if (permissionAlert && permissionMessage) {
+                permissionMessage.textContent = 'Requesting microphone access...';
+                permissionAlert.classList.remove('d-none');
+            }
+
+            this.stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    sampleRate: 44100
+                }
+            });
+            
+            // Hide permission alert on success
+            if (permissionAlert) {
+                permissionAlert.classList.add('d-none');
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+            
+            let message = 'Failed to access microphone. ';
+            if (error.name === 'NotAllowedError') {
+                message += 'Please allow microphone access and try again.';
+            } else if (error.name === 'NotFoundError') {
+                message += 'No microphone found. Please connect a microphone and try again.';
+            } else {
+                message += 'Please check your microphone settings.';
+            }
+            
+            // Show error in permission alert
+            const permissionAlert = document.getElementById('permissionAlert');
+            const permissionMessage = document.getElementById('permissionMessage');
+            
+            if (permissionAlert && permissionMessage) {
+                permissionAlert.classList.remove('alert-warning');
+                permissionAlert.classList.add('alert-danger');
+                permissionMessage.innerHTML = `<strong>Error:</strong> ${message}`;
+                permissionAlert.classList.remove('d-none');
+            } else {
+                showAlert(message, 'danger');
+            }
+            
+            return false;
+        }
+    }
+
+    startRecording() {
+        if (!this.stream) return false;
+
+        this.audioChunks = [];
+        this.recordedBlob = null;
+        
+        try {
+            // Try different audio formats in order of preference
+            let options = {};
+            
+            if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+                options.mimeType = 'audio/webm;codecs=opus';
+            } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+                options.mimeType = 'audio/webm';
+            } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+                options.mimeType = 'audio/ogg;codecs=opus';
+            } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                options.mimeType = 'audio/mp4';
+            }
+            // If none supported, let browser choose default
+
+            this.mediaRecorder = new MediaRecorder(this.stream, options);
+            
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    this.audioChunks.push(event.data);
+                }
+            };
+
+            this.mediaRecorder.onstop = () => {
+                this.recordedBlob = new Blob(this.audioChunks, { 
+                    type: this.mediaRecorder.mimeType || 'audio/webm' 
+                });
+                this.updatePlaybackSection();
+            };
+
+            this.mediaRecorder.start(1000); // Collect data every second
+            this.startTime = Date.now();
+            this.startTimer();
+            
+            // Auto-stop after max recording time
+            this.autoStopTimeout = setTimeout(() => {
+                if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+                    this.stopRecording();
+                    showAlert('Recording stopped automatically after 60 seconds', 'info');
+                }
+            }, this.maxRecordingTime);
+            
+            return true;
+        } catch (error) {
+            console.error('Error starting recording:', error);
+            showAlert('Failed to start recording. Please try again.', 'danger');
+            return false;
+        }
+    }
+
+    stopRecording() {
+        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.mediaRecorder.stop();
+            this.stopTimer();
+            
+            // Clear auto-stop timeout
+            if (this.autoStopTimeout) {
+                clearTimeout(this.autoStopTimeout);
+                this.autoStopTimeout = null;
+            }
+            
+            return true;
+        }
+        return false;
+    }
+
+    startTimer() {
+        this.updateTimer();
+        this.timerInterval = setInterval(() => {
+            this.updateTimer();
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+    }
+
+    updateTimer() {
+        if (this.startTime) {
+            const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            const statusText = document.getElementById('recordingStatusText');
+            if (statusText) {
+                statusText.textContent = `Recording... ${timeString}`;
+            }
+            
+            // Update progress bar
+            const progressBar = document.getElementById('recordingProgress');
+            if (progressBar) {
+                const progressPercent = Math.min((elapsed / 60) * 100, 100);
+                progressBar.style.width = `${progressPercent}%`;
+                
+                // Change color as it approaches limit
+                if (progressPercent > 80) {
+                    progressBar.classList.remove('bg-success', 'bg-warning');
+                    progressBar.classList.add('bg-danger');
+                } else if (progressPercent > 60) {
+                    progressBar.classList.remove('bg-success', 'bg-danger');
+                    progressBar.classList.add('bg-warning');
+                } else {
+                    progressBar.classList.remove('bg-warning', 'bg-danger');
+                    progressBar.classList.add('bg-success');
+                }
+            }
+        }
+    }
+
+    updatePlaybackSection() {
+        if (this.recordedBlob) {
+            const playbackSection = document.getElementById('playbackSection');
+            const recordingPreview = document.getElementById('recordingPreview');
+            const durationSpan = document.getElementById('recordingDuration');
+            
+            if (playbackSection && recordingPreview) {
+                const audioUrl = URL.createObjectURL(this.recordedBlob);
+                recordingPreview.src = audioUrl;
+                playbackSection.classList.remove('d-none');
+                
+                // Update duration when metadata loads
+                recordingPreview.addEventListener('loadedmetadata', () => {
+                    const duration = Math.round(recordingPreview.duration);
+                    if (durationSpan) {
+                        durationSpan.textContent = `${duration}s`;
+                    }
+                });
+            }
+        }
+    }
+
+    getRecordedBlob() {
+        return this.recordedBlob;
+    }
+
+    cleanup() {
+        this.stopTimer();
+        
+        // Clear auto-stop timeout
+        if (this.autoStopTimeout) {
+            clearTimeout(this.autoStopTimeout);
+            this.autoStopTimeout = null;
+        }
+        
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+        if (this.recordedBlob) {
+            URL.revokeObjectURL(document.getElementById('recordingPreview')?.src);
+        }
+        this.mediaRecorder = null;
+        this.audioChunks = [];
+        this.recordedBlob = null;
+    }
+}
+
+// Global audio recorder instance
+let audioRecorder = null;
+
+// Recording management functions
+function initializeRecordingModal() {
+    // Initialize audio recorder
+    audioRecorder = new AudioRecorder();
+    
+    // Set up event listeners
+    const methodRadios = document.querySelectorAll('input[name="recordingMethod"]');
+    const recordingSection = document.getElementById('recordingSection');
+    const uploadSection = document.getElementById('uploadSection');
+    const startBtn = document.getElementById('startRecordBtn');
+    const stopBtn = document.getElementById('stopRecordBtn');
+    const playBtn = document.getElementById('playRecordingBtn');
+    const reRecordBtn = document.getElementById('reRecordBtn');
+    const recordingStatus = document.getElementById('recordingStatus');
+    const playbackSection = document.getElementById('playbackSection');
+    const saveBtn = document.getElementById('saveRecordingBtn');
+    const saveText = document.getElementById('saveRecordingText');
+
+    // Method selection handler
+    methodRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            const isRecord = e.target.value === 'record';
+            
+            if (recordingSection && uploadSection) {
+                recordingSection.classList.toggle('d-none', !isRecord);
+                uploadSection.classList.toggle('d-none', isRecord);
+            }
+            
+            // Update save button text
+            if (saveText) {
+                saveText.textContent = isRecord ? 'Save Recording' : 'Upload Recording';
+            }
+            
+            // Reset recording state when switching methods
+            if (isRecord) {
+                resetRecordingState();
+            }
+        });
+    });
+
+    // Start recording
+    if (startBtn) {
+        startBtn.addEventListener('click', async () => {
+            const hasPermission = await audioRecorder.requestPermission();
+            if (!hasPermission) return;
+
+            const started = audioRecorder.startRecording();
+            if (started) {
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                
+                if (recordingStatus) {
+                    recordingStatus.classList.remove('d-none', 'ready');
+                    recordingStatus.classList.add('recording');
+                }
+                
+                if (recordingSection) {
+                    recordingSection.classList.add('recording-active');
+                }
+                
+                if (playbackSection) {
+                    playbackSection.classList.add('d-none');
+                }
+            }
+        });
+    }
+
+    // Stop recording
+    if (stopBtn) {
+        stopBtn.addEventListener('click', () => {
+            const stopped = audioRecorder.stopRecording();
+            if (stopped) {
+                stopBtn.style.display = 'none';
+                startBtn.style.display = 'inline-block';
+                
+                if (recordingStatus) {
+                    recordingStatus.classList.remove('recording');
+                    recordingStatus.classList.add('ready');
+                    document.getElementById('recordingStatusText').textContent = 'Recording completed! You can now preview and save.';
+                }
+                
+                if (recordingSection) {
+                    recordingSection.classList.remove('recording-active');
+                }
+            }
+        });
+    }
+
+    // Play recorded audio
+    if (playBtn) {
+        playBtn.addEventListener('click', () => {
+            const preview = document.getElementById('recordingPreview');
+            if (preview) {
+                if (preview.paused) {
+                    preview.play();
+                    playBtn.innerHTML = '<i class="fas fa-pause me-1"></i>Pause';
+                } else {
+                    preview.pause();
+                    playBtn.innerHTML = '<i class="fas fa-play me-1"></i>Play';
+                }
+            }
+        });
+    }
+
+    // Re-record
+    if (reRecordBtn) {
+        reRecordBtn.addEventListener('click', () => {
+            resetRecordingState();
+        });
+    }
+
+    // Handle audio preview events
+    const preview = document.getElementById('recordingPreview');
+    if (preview) {
+        preview.addEventListener('ended', () => {
+            if (playBtn) {
+                playBtn.innerHTML = '<i class="fas fa-play me-1"></i>Play';
+            }
+        });
+        
+        preview.addEventListener('pause', () => {
+            if (playBtn) {
+                playBtn.innerHTML = '<i class="fas fa-play me-1"></i>Play';
+            }
+        });
+    }
+}
+
+function resetRecordingState() {
+    const startBtn = document.getElementById('startRecordBtn');
+    const stopBtn = document.getElementById('stopRecordBtn');
+    const recordingStatus = document.getElementById('recordingStatus');
+    const playbackSection = document.getElementById('playbackSection');
+    const recordingSection = document.getElementById('recordingSection');
+    const playBtn = document.getElementById('playRecordingBtn');
+    const permissionAlert = document.getElementById('permissionAlert');
+    const progressBar = document.getElementById('recordingProgress');
+
+    if (startBtn) startBtn.style.display = 'inline-block';
+    if (stopBtn) stopBtn.style.display = 'none';
+    
+    if (recordingStatus) {
+        recordingStatus.classList.add('d-none');
+        recordingStatus.classList.remove('recording', 'ready');
+        document.getElementById('recordingStatusText').textContent = 'Ready to record';
+    }
+    
+    if (progressBar) {
+        progressBar.style.width = '0%';
+        progressBar.classList.remove('bg-warning', 'bg-danger');
+        progressBar.classList.add('bg-success');
+    }
+    
+    if (playbackSection) {
+        playbackSection.classList.add('d-none');
+    }
+    
+    if (recordingSection) {
+        recordingSection.classList.remove('recording-active');
+    }
+    
+    if (playBtn) {
+        playBtn.innerHTML = '<i class="fas fa-play me-1"></i>Play';
+    }
+
+    if (permissionAlert) {
+        permissionAlert.classList.add('d-none');
+        permissionAlert.classList.remove('alert-danger');
+        permissionAlert.classList.add('alert-warning');
+    }
+
+    if (audioRecorder) {
+        audioRecorder.cleanup();
+        audioRecorder = new AudioRecorder();
+    }
+}
+
+// Updated save recording function
+async function saveRecording(childName) {
+    const yearInput = document.getElementById('recordingYear');
+    const year = parseInt(yearInput.value);
+    
+    if (!year || year < 2000 || year > 2030) {
+        showAlert('Please enter a valid year', 'warning');
+        return;
+    }
+    
+    const method = document.querySelector('input[name="recordingMethod"]:checked')?.value;
+    const saveBtn = document.getElementById('saveRecordingBtn');
+    
+    setButtonLoading(saveBtn);
+    
+    try {
+        if (method === 'record') {
+            // Handle browser recording
+            if (!audioRecorder || !audioRecorder.getRecordedBlob()) {
+                showAlert('Please record audio first', 'warning');
+                return;
+            }
+            
+            await saveRecordedAudio(childName, year, audioRecorder.getRecordedBlob());
+        } else {
+            // Handle file upload (existing functionality)
+            await saveUploadedAudio(childName, year);
+        }
+    } catch (error) {
+        showAlert(`Failed to save recording: ${error.message}`, 'danger');
+    } finally {
+        setButtonLoading(saveBtn, false);
+    }
+}
+
+async function saveRecordedAudio(childName, year, audioBlob) {
+    const formData = new FormData();
+    
+    // Determine file extension based on mime type
+    let extension = 'webm'; // default
+    const mimeType = audioBlob.type.toLowerCase();
+    
+    if (mimeType.includes('webm')) {
+        extension = 'webm';
+    } else if (mimeType.includes('ogg')) {
+        extension = 'ogg';
+    } else if (mimeType.includes('mp4') || mimeType.includes('m4a')) {
+        extension = 'm4a';
+    } else if (mimeType.includes('wav')) {
+        extension = 'wav';
+    }
+    
+    const fileName = `recording_${year}.${extension}`;
+    const audioFile = new File([audioBlob], fileName, { type: audioBlob.type });
+    
+    formData.append('audio', audioFile);
+    formData.append('year', year.toString());
+    
+    const response = await fetch(`/api/children/${encodeURIComponent(childName)}/words/${encodeURIComponent(currentWord)}/recordings`, {
+        method: 'POST',
+        body: formData
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+    }
+    
+    showAlert(`Recording for ${year} has been saved successfully!`, 'success');
+    
+    // Close modal and reset
+    bootstrap.Modal.getInstance(document.getElementById('addRecordingModal')).hide();
+    resetRecordingModal();
+    
+    // Reload page to show new recording
+    setTimeout(() => window.location.reload(), 1000);
+}
+
+async function saveUploadedAudio(childName, year) {
+    const fileInput = document.getElementById('recordingFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showAlert('Please select an audio file', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('audio', file);
+    formData.append('year', year.toString());
+    
+    const response = await fetch(`/api/children/${encodeURIComponent(childName)}/words/${encodeURIComponent(currentWord)}/recordings`, {
+        method: 'POST',
+        body: formData
+    });
+    
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+    }
+    
+    showAlert(`Recording for ${year} has been uploaded successfully!`, 'success');
+    
+    // Close modal and reset
+    bootstrap.Modal.getInstance(document.getElementById('addRecordingModal')).hide();
+    resetRecordingModal();
+    
+    // Reload page to show new recording
+    setTimeout(() => window.location.reload(), 1000);
+}
+
+function resetRecordingModal() {
+    // Reset form
+    document.getElementById('recordingYear').value = '2025';
+    const fileInput = document.getElementById('recordingFile');
+    if (fileInput) fileInput.value = '';
+    
+    // Reset method selection
+    const recordRadio = document.getElementById('methodRecord');
+    if (recordRadio) recordRadio.checked = true;
+    
+    // Reset sections visibility
+    const recordingSection = document.getElementById('recordingSection');
+    const uploadSection = document.getElementById('uploadSection');
+    if (recordingSection) recordingSection.classList.remove('d-none');
+    if (uploadSection) uploadSection.classList.add('d-none');
+    
+    // Reset recording state
+    resetRecordingState();
+    
+    // Reset save button text
+    const saveText = document.getElementById('saveRecordingText');
+    if (saveText) saveText.textContent = 'Save Recording';
+}

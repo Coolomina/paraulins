@@ -13,7 +13,7 @@ class Config:
     IMAGES_DIR = os.path.join(DATA_DIR, "images")
     DATA_FILE = os.path.join(DATA_DIR, "data.json")
 
-    ALLOWED_AUDIO_EXTENSIONS = {"mp3", "wav", "ogg", "m4a"}
+    ALLOWED_AUDIO_EXTENSIONS = {"mp3", "wav", "ogg", "m4a", "webm"}
     ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif"}
 
     MAX_AUDIO_SIZE = 10 * 1024 * 1024  # 10MB
