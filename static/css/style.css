@@ -1,104 +1,758 @@
-/* Custom styles for Family Voices */
+/* Studio Ghibli Magical Theme for Paraulins */
 
+/* Import magical fonts */
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+/* Color Palette - Inspired by Studio Ghibli films */
+:root {
+    --ghibli-forest-green: #2d5a3d;
+    --ghibli-sage-green: #7faf8f;
+    --ghibli-moss-green: #9ecaad;
+    --ghibli-cream: #f7f3e9;
+    --ghibli-warm-cream: #f5f0e8;
+    --ghibli-earth-brown: #8b6f47;
+    --ghibli-sky-blue: #87ceeb;
+    --ghibli-sunset-orange: #ff9a8b;
+    --ghibli-magic-purple: #b19cd9;
+    --ghibli-gold: #d4af37;
+    --ghibli-soft-shadow: rgba(139, 111, 71, 0.1);
+    --ghibli-magical-glow: rgba(212, 175, 55, 0.3);
+}
+
+/* Base styling */
 body {
-    background-color: #f8f9fa;
-}
-
-.word-card {
-    transition: transform 0.2s ease-in-out;
-}
-
-.word-card:hover {
-    transform: translateY(-2px);
-}
-
-.word-image {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 2px solid #dee2e6;
-}
-
-.word-image-placeholder {
-    width: 60px;
-    height: 60px;
-    border: 2px dashed #dee2e6;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #f8f9fa;
-}
-
-.word-image-placeholder i {
-    font-size: 24px;
-}
-
-.year-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-}
-
-.play-btn {
+    background: linear-gradient(135deg, var(--ghibli-cream) 0%, var(--ghibli-warm-cream) 100%);
+    font-family: 'Quicksand', sans-serif;
+    color: var(--ghibli-forest-green);
+    min-height: 100vh;
     position: relative;
+    overflow-x: hidden;
+}
+
+/* Magical background pattern */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        radial-gradient(circle at 20% 80%, var(--ghibli-moss-green) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, var(--ghibli-sage-green) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, var(--ghibli-magical-glow) 0%, transparent 50%);
+    opacity: 0.05;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Navigation - Magical forest canopy */
+.ghibli-nav {
+    background: linear-gradient(135deg, var(--ghibli-forest-green) 0%, var(--ghibli-sage-green) 100%);
+    box-shadow: 0 4px 20px var(--ghibli-soft-shadow);
+    border-bottom: 3px solid var(--ghibli-gold);
+    padding: 1rem 0;
+}
+
+.ghibli-brand {
+    font-family: 'Comfortaa', sans-serif;
+    font-weight: 600;
+    font-size: 1.8rem;
+    color: var(--ghibli-cream) !important;
+    text-decoration: none;
     transition: all 0.3s ease;
 }
 
-.play-btn:hover {
-    transform: scale(1.05);
+.ghibli-brand:hover {
+    color: var(--ghibli-gold) !important;
+    text-shadow: 0 0 10px var(--ghibli-magical-glow);
 }
 
-.play-btn.playing {
-    background-color: #198754;
-    border-color: #198754;
+.brand-subtitle {
+    font-size: 0.7rem;
+    display: block;
+    font-weight: 300;
+    margin-top: -5px;
+    opacity: 0.8;
+}
+
+.ghibli-nav-link {
+    color: var(--ghibli-cream) !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.ghibli-nav-link:hover {
+    color: var(--ghibli-gold) !important;
+}
+
+/* Hero section with floating elements */
+.ghibli-hero {
+    min-height: 85vh;
+    position: relative;
+    padding: 4rem 0;
+}
+
+.floating-elements {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.floating-leaf, .floating-sparkle {
+    position: absolute;
+    font-size: 2rem;
+    animation: float 6s ease-in-out infinite;
+    opacity: 0.7;
+}
+
+.floating-leaf-1 {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+    animation-duration: 8s;
+}
+
+.floating-leaf-2 {
+    top: 60%;
+    right: 15%;
+    animation-delay: 2s;
+    animation-duration: 7s;
+}
+
+.floating-leaf-3 {
+    top: 40%;
+    left: 80%;
+    animation-delay: 4s;
+    animation-duration: 9s;
+}
+
+.sparkle-1 {
+    top: 15%;
+    right: 20%;
+    animation-delay: 1s;
+    animation-duration: 6s;
+}
+
+.sparkle-2 {
+    top: 70%;
+    left: 25%;
+    animation-delay: 3s;
+    animation-duration: 8s;
+}
+
+.sparkle-3 {
+    top: 30%;
+    right: 40%;
+    animation-delay: 5s;
+    animation-duration: 7s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-20px) rotate(5deg); }
+    66% { transform: translateY(10px) rotate(-3deg); }
+}
+
+/* Typography - Magical and whimsical */
+.ghibli-title {
+    font-family: 'Comfortaa', sans-serif;
+    font-weight: 400;
+    font-size: 3.2rem;
+    color: var(--ghibli-forest-green);
+    text-align: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.ghibli-subtitle {
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 400;
+    font-size: 1.3rem;
+    color: var(--ghibli-earth-brown);
+    text-align: center;
+    line-height: 1.6;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* Card styling - Magical floating cards */
+.ghibli-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px var(--ghibli-soft-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    backdrop-filter: blur(10px);
+    z-index: 3;
+}
+
+.ghibli-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--ghibli-sage-green), var(--ghibli-gold), var(--ghibli-magic-purple));
+    opacity: 0.8;
+}
+
+.ghibli-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px var(--ghibli-soft-shadow);
+}
+
+.card-magical-border {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    background: linear-gradient(45deg, var(--ghibli-sage-green), var(--ghibli-gold)) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: exclude;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.ghibli-card:hover .card-magical-border {
+    opacity: 0.6;
+}
+
+/* Child avatars */
+.child-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ghibli-sage-green), var(--ghibli-moss-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 8px 20px var(--ghibli-soft-shadow);
+    transition: all 0.3s ease;
+}
+
+.ghibli-card:hover .child-avatar {
+    transform: scale(1.1);
+    box-shadow: 0 12px 30px var(--ghibli-soft-shadow);
+}
+
+.ghibli-child-name {
+    font-family: 'Comfortaa', sans-serif;
+    font-weight: 500;
+    font-size: 1.4rem;
+    color: var(--ghibli-forest-green);
+    margin-bottom: 0.5rem;
+}
+
+.ghibli-word-count {
+    color: var(--ghibli-earth-brown);
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Buttons - Magical and enchanting */
+.ghibli-btn-primary {
+    background: linear-gradient(135deg, var(--ghibli-sage-green), var(--ghibli-forest-green));
+    border: none;
+    color: white;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    padding: 0.8rem 2rem;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px var(--ghibli-soft-shadow);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.ghibli-btn-primary:hover {
+    background: linear-gradient(135deg, var(--ghibli-forest-green), var(--ghibli-sage-green));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--ghibli-soft-shadow);
     color: white;
 }
 
-.play-btn.playing i {
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-.recordings-section {
-    border-top: 1px solid #dee2e6;
-    padding-top: 12px;
-    margin-top: 12px;
-}
-
-.navbar-brand {
+.ghibli-btn-magic {
+    background: linear-gradient(135deg, var(--ghibli-magic-purple), var(--ghibli-gold));
+    border: none;
+    color: white;
+    font-family: 'Quicksand', sans-serif;
     font-weight: 600;
-    font-size: 1.5rem;
+    padding: 1rem 2.5rem;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(177, 156, 217, 0.3);
+    position: relative;
+    overflow: hidden;
 }
 
-.display-4 {
-    color: #495057;
-    font-weight: 300;
+.ghibli-btn-magic::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
 }
 
-.card {
-    border: none;
-    border-radius: 12px;
+.ghibli-btn-magic:hover::before {
+    left: 100%;
 }
 
-.btn {
-    border-radius: 6px;
+.ghibli-btn-magic:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(177, 156, 217, 0.4);
+    color: white;
+}
+
+.ghibli-btn-secondary {
+    background: rgba(139, 111, 71, 0.1);
+    border: 2px solid var(--ghibli-earth-brown);
+    color: var(--ghibli-earth-brown);
+    font-family: 'Quicksand', sans-serif;
     font-weight: 500;
+    padding: 0.8rem 2rem;
+    border-radius: 25px;
+    transition: all 0.3s ease;
 }
 
-.modal-content {
-    border-radius: 12px;
+.ghibli-btn-secondary:hover {
+    background: var(--ghibli-earth-brown);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Additional missing Ghibli button styles */
+.ghibli-btn-tiny {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    border-radius: 15px;
     border: none;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
-.modal-header {
+.ghibli-btn-outline {
+    background: transparent;
+    border: 1px solid var(--ghibli-sage-green);
+    color: var(--ghibli-sage-green);
+}
+
+.ghibli-btn-outline:hover {
+    background: var(--ghibli-sage-green);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.ghibli-btn-play {
+    background: linear-gradient(135deg, var(--ghibli-sky-blue), var(--ghibli-moss-green));
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.ghibli-btn-play:hover {
+    background: linear-gradient(135deg, var(--ghibli-moss-green), var(--ghibli-sky-blue));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px var(--ghibli-soft-shadow);
+}
+
+.ghibli-btn-method {
+    background: rgba(127, 175, 143, 0.1);
+    border: 2px solid var(--ghibli-sage-green);
+    color: var(--ghibli-sage-green);
+    padding: 0.8rem 1.5rem;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.ghibli-btn-method:hover,
+.ghibli-btn-method.active {
+    background: var(--ghibli-sage-green);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.ghibli-btn-record {
+    background: linear-gradient(135deg, var(--ghibli-sunset-orange), var(--ghibli-gold));
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.ghibli-btn-record:hover {
+    background: linear-gradient(135deg, var(--ghibli-gold), var(--ghibli-sunset-orange));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 154, 139, 0.3);
+}
+
+.ghibli-btn-stop {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 25px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.ghibli-btn-stop:hover {
+    background: linear-gradient(135deg, #c82333, #dc3545);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+}
+
+/* Child navigation button */
+.btn-ghibli-child {
+    background: linear-gradient(135deg, var(--ghibli-sage-green), var(--ghibli-forest-green));
+    color: white;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    display: inline-block;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px var(--ghibli-soft-shadow);
+    position: relative;
+    z-index: 10;
+    cursor: pointer;
+}
+
+.btn-ghibli-child:hover {
+    background: linear-gradient(135deg, var(--ghibli-forest-green), var(--ghibli-moss-green));
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--ghibli-soft-shadow);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-ghibli-child:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ghibli-magical-glow);
+}
+
+/* Ensure buttons are clickable and above other elements */
+.ghibli-btn-primary, .ghibli-btn-secondary, .ghibli-btn-magic, .btn-ghibli-child {
+    position: relative;
+    z-index: 10;
+    cursor: pointer;
+}
+
+.ghibli-btn-primary:hover, .ghibli-btn-secondary:hover, .ghibli-btn-magic:hover, .btn-ghibli-child:hover {
+    z-index: 11;
+}
+
+/* Hero section - adjustments for child pages */
+.ghibli-hero-child {
+    background: linear-gradient(135deg, rgba(45, 90, 61, 0.8), rgba(255, 154, 139, 0.8)), url('path-to-your-child-page-hero-image.jpg') no-repeat center center/cover;
+    position: relative;
+    padding: 6rem 0;
+    border-radius: 0 0 20px 20px;
+    overflow: hidden;
+}
+
+.ghibli-hero-child::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 0 0 20px 20px;
+    z-index: 1;
+}
+
+.ghibli-hero-child .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+.ghibli-hero-child .ghibli-title {
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+}
+
+.ghibli-hero-child .ghibli-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+/* Section padding adjustments */
+.section-padding {
+    padding: 4rem 2rem;
+}
+
+.section-padding-sm {
+    padding: 2rem 1rem;
+}
+
+/* Empty word garden state */
+.ghibli-empty-words {
+    padding: 4rem 0;
+    position: relative;
+}
+
+.empty-garden-small {
+    position: relative;
+    margin: 0 auto 2rem;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-garden-small i {
+    font-size: 4rem;
+    color: var(--ghibli-sage-green);
+    opacity: 0.6;
+}
+
+.small-garden-ground {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 8px;
+    background: linear-gradient(90deg, var(--ghibli-earth-brown), var(--ghibli-moss-green));
+    border-radius: 50px;
+    opacity: 0.5;
+}
+
+.ghibli-empty-title {
+    font-family: 'Comfortaa', sans-serif;
+    font-weight: 500;
+    color: var(--ghibli-forest-green);
+    margin-bottom: 1rem;
+}
+
+.ghibli-empty-text {
+    color: var(--ghibli-earth-brown);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.8;
+}
+
+/* Ghibli Word Image Styling */
+.ghibli-word-image-container {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--ghibli-warm-cream);
+    border: 2px solid var(--ghibli-moss-green);
+    box-shadow: 0 4px 12px var(--ghibli-soft-shadow);
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.ghibli-word-image-container:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px var(--ghibli-soft-shadow);
+}
+
+.ghibli-word-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.ghibli-word-image:hover {
+    transform: scale(1.1);
+}
+
+.ghibli-word-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--ghibli-moss-green), var(--ghibli-sage-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2rem;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.ghibli-word-placeholder:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+/* Image search results styling */
+.image-search-result {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    cursor: pointer;
+}
+
+.image-search-result:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.image-search-result.border-primary {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.image-search-result .card-img-top {
+    transition: transform 0.3s ease;
+}
+
+.image-search-result:hover .card-img-top {
+    transform: scale(1.02);
+}
+
+#imageSearchResults {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #fafafa;
+}
+
+#noResults {
+    padding: 2rem;
+}
+
+#searchLoading {
+    padding: 2rem;
+}
+
+/* Tab styling improvements */
+.nav-tabs .nav-link {
+    border: none;
+    color: #6c757d;
+    background: none;
+    padding: 0.75rem 1.5rem;
+}
+
+.nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, #e3f2fd, #f8f9fa);
+    color: #0d6efd;
+    border-bottom: 3px solid #0d6efd;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #0d6efd;
+    background: #f8f9fa;
+}
+
+/* Modal improvements */
+.modal-lg .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Search loading state */
+#searchLoading {
+    padding: 3rem 0;
+}
+
+#noResults {
+    padding: 3rem 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .ghibli-title {
+        font-size: 2.5rem;
+    }
+
+    .ghibli-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .ghibli-page-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .child-hero-avatar {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+
+    .ghibli-child-title {
+        font-size: 2rem;
+    }
+
+    .floating-leaf, .floating-sparkle {
+        font-size: 1.5rem;
+    }
+
+    .ghibli-recording-methods {
+        flex-direction: column;
+    }
+
+    .word-actions {
+        flex-direction: row;
+        align-items: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .ghibli-title {
+        font-size: 2rem;
+    }
+
+    .ghibli-hero {
+        padding: 2rem 0;
+    }
+
+    .ghibli-page-header {
+        padding: 1.5rem;
+    }
+
+    .child-hero-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 2.5rem;
+    }
+}
+
+/* Modal styling */
+.ghibli-modal-header {
     border-bottom: 1px solid #dee2e6;
     background-color: #f8f9fa;
     border-radius: 12px 12px 0 0;
@@ -186,18 +840,73 @@ body {
     border-radius: 6px;
 }
 
+/* Recording items styling */
+.recording-item {
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
+
+.recording-item:hover {
+    background-color: #e9ecef;
+}
+
+.recordings-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Minimalist delete button styling */
+.delete-btn {
+    font-size: 1.2rem;
+    line-height: 1;
+    color: #6c757d !important;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+    text-decoration: none !important;
+    font-weight: normal;
+}
+
+.delete-btn:hover {
+    color: #dc3545 !important;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.delete-word-btn {
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+    text-decoration: none !important;
+    font-size: 0.75rem;
+}
+
+.delete-word-btn:hover {
+    opacity: 1;
+    color: #dc3545 !important;
+}
+
+/* Word card styling */
+.word-card .delete-word-btn {
+    opacity: 0.4;
+}
+
+.word-card:hover .delete-word-btn {
+    opacity: 0.8;
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
     .word-image {
         width: 50px;
         height: 50px;
     }
-    
+
     .word-image-placeholder {
         width: 50px;
         height: 50px;
     }
-    
+
     .year-buttons .btn {
         font-size: 0.875rem;
         padding: 0.375rem 0.75rem;

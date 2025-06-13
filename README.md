@@ -1,148 +1,83 @@
-# Family Voices - Pronunciation Evolution Tracker
+# 🎙️ Paraulins - Pronunciation Evolution Tracker
 
-A webapp to track and listen to the evolution of your children's pronunciation of words over the years.
+Track your children's pronunciation evolution over time with this modern web application. Record, upload, and organize audio recordings with visual waveform editing.
 
-## Features
+[![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://python.org)
+[![Flask](https://img.shields.io/badge/flask-2.3+-green.svg)](https://flask.palletsprojects.com/)
+[![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://docker.com)
 
-- Select between your two daughters
-- Manage words for each child with audio recordings by **month and year**
-- **Browser-based recording**: Record directly in your browser with microphone access
-- **File upload option**: Upload pre-recorded audio files
-- Attach images to words for easy recognition
-- Play audio recordings organized chronologically
-- File-based storage (no database required)
+## ✨ Key Features
 
-### Recording Options
+- **Multi-child management** with individual vocabularies
+- **Browser recording** or **file upload** (MP3, WAV, OGG, M4A, WebM)
+- **Visual waveform trimming** with click-and-drag selection
+- **Date-precise tracking** (daily, monthly, yearly organization)
+- **Image associations** for words
+- **Mobile-responsive** Bootstrap 5 interface
+- **Local file storage** (no cloud uploads)
+- **Image search** using Pixabay API (optional). [Docs](./IMAGE_SEARCH_SETUP.md).
 
-The app provides two convenient ways to add audio recordings:
+## 🚀 Quick Start
 
-1. **Record Now**: Click the microphone button to record directly in your browser
-   - Automatically requests microphone permission
-   - Visual recording timer with progress bar
-   - 60-second maximum recording time
-   - Preview and re-record functionality
-   - Supports multiple audio formats (WebM, OGG, MP4)
-
-2. **Upload File**: Upload pre-recorded audio files
-   - Supports MP3, WAV, OGG, M4A, and WebM formats
-   - Maximum file size: 10MB
-
-### Monthly Tracking
-
-Recordings are now organized by **month and year** instead of just year, giving you much better granularity to track pronunciation evolution. You can:
-
-- Record multiple times per year
-- See progression month by month
-- Compare recordings from the same month across different years
-- Default to current month when adding new recordings
-
-## Quick Start
-
-Using PDM and Make:
+### Docker (Recommended)
 ```bash
-# Setup development environment (one-time)
-make setup-dev
-
-# Run the application
-make run
-
-# Run tests
-make test
-
-# Run all quality checks
-make check
+git clone <repository-url> && cd voices
+docker build -t paraulins .
+docker run -p 5001:5001 -v $(pwd)/data:/app/data paraulins
 ```
 
-Manual setup:
-
-1. Install PDM (if not already installed):
+### Local Development
 ```bash
-pip install pdm
-```
-
-2. Install dependencies and create virtual environment:
-```bash
+git clone <repository-url> && cd voices
 pdm install
-```
-
-3. Create the data directories:
-```bash
-mkdir -p data/audio data/images
-```
-
-4. Run the application:
-```bash
 pdm run start
 ```
 
-5. Open your browser to `http://localhost:5000`
+Open `http://localhost:5001`
 
-## Development
+## 🛠️ Development
 
-### Running Tests
+### Setup
 ```bash
-# Run all tests
-pdm run test
-
-# Run tests with coverage
-pdm run test-cov
+pdm install                # Install dependencies
+pdm run pre-commit-install # Install pre-commit hooks
+pdm run start              # Start development server
 ```
 
-### Code Quality
+### Scripts
 ```bash
-# Format code
-pdm run format
-
-# Lint code
-pdm run lint
-
-# Type checking
-pdm run type-check
+pdm run test          # Run tests with coverage
+pdm run lint          # Run flake8 linting  
+pdm run format        # Format with black
+pdm run type-check    # Run mypy
 ```
 
-### Installing Additional Dependencies
-```bash
-# Add a runtime dependency
-pdm add package_name
-
-# Add a development dependency
-pdm add -dG dev package_name
-
-# Add a test dependency
-pdm add -dG test package_name
-```
-
-## Project Structure
+## 📁 Project Structure
 
 ```
 voices/
-├── app.py                 # Flask application entry point
-├── models/
-│   ├── __init__.py
-│   ├── child.py          # Child model
-│   ├── word.py           # Word model
-│   └── recording.py      # Recording model
-├── services/
-│   ├── __init__.py
-│   ├── audio_service.py  # Audio file management
-│   ├── image_service.py  # Image file management
-│   └── data_service.py   # Data persistence
-├── routes/
-│   ├── __init__.py
-│   ├── api.py            # REST API routes
-│   └── web.py            # Web interface routes
-├── static/               # CSS, JS, images
+├── app.py                 # Flask application
+├── models/               # Data models (Child, Word, Recording)
+├── routes/               # API & web routes  
+├── services/             # Business logic (Audio, Data, Image)
+├── static/               # CSS & JavaScript
 ├── templates/            # HTML templates
-├── data/                 # Data storage
-│   ├── audio/           # Audio files
-│   ├── images/          # Word images
-│   └── data.json        # Application data
-├── tests/               # Unit tests
-└── config.py            # Configuration
+├── tests/                # Test suite
+└── data/                 # Storage (JSON + audio/image files)
 ```
 
-## Data Structure
+## 🎯 Usage
 
-Audio files are stored as: `data/audio/{child_name}/{word}/{year}.mp3`
-Images are stored as: `data/images/{word}.jpg`
-Metadata is stored in: `data/data.json`
+1. **Add children** on the home page
+2. **Add words** for each child
+3. **Record audio** (browser recording or file upload)
+4. **Trim audio** using the visual waveform (optional)
+5. **Add images** to words for visual recognition
+
+## 🤝 Contributing
+
+**Quick start**: Fork → Clone → `pdm install` → Make changes → `pdm run test && pdm run lint` → Submit PR
+
+## License
+
+MIT License - see [LICENSE](LICENSE) file.
