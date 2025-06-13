@@ -1,11 +1,35 @@
 from flask import Blueprint, jsonify, request, send_file
-from services.data_service import DataService
-from services.audio_service import AudioService
-from services.image_service import ImageService
+
 from models.child import Child
 from models.word import Word
+from services.audio_service import AudioService
+from services.data_service import DataService
+from services.image_service import ImageService
 
 api = Blueprint("api", __name__)
+
+
+@api.route("/health", methods=["GET"])
+def health_check():
+    """Health check endpoint for container monitoring"""
+    try:
+        # Basic health check - verify services can be instantiated
+        data_service = DataService()
+        # Simple validation that services are working
+        children = data_service.get_children()
+        return (
+            jsonify(
+                {
+                    "status": "healthy",
+                    "service": "family-voices",
+                    "version": "1.0.0",
+                    "children_count": len(children),
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        return jsonify({"status": "unhealthy", "error": str(e)}), 503
 
 
 @api.route("/children", methods=["GET"])
@@ -77,9 +101,7 @@ def add_word_to_child(child_name):
 
         # Check if word already exists
         if child.get_word(word_text):
-            return jsonify({
-                "error": "Word already exists for this child"
-            }), 409
+            return jsonify({"error": "Word already exists for this child"}), 409
 
         word = Word(word_text)
         child.add_word(word)
@@ -125,9 +147,7 @@ def upload_word_image(child_name, word_text):
         return jsonify({"error": str(e)}), 500
 
 
-@api.route(
-    "/children/<child_name>/words/<word_text>/recordings", methods=["POST"]
-)
+@api.route("/children/<child_name>/words/<word_text>/recordings", methods=["POST"])
 def upload_recording(child_name, word_text):
     """Upload an audio recording for a word"""
     try:
@@ -147,29 +167,49 @@ def upload_recording(child_name, word_text):
         if file.filename == "":
             return jsonify({"error": "No audio file selected"}), 400
 
-        if "year" not in request.form:
-            return jsonify({"error": "Year is required"}), 400
-
-        if "month" not in request.form:
-            return jsonify({"error": "Month is required"}), 400
+        if "date" not in request.form:
+            return jsonify({"error": "Date is required"}), 400
 
         try:
-            year = int(request.form["year"])
-            month = int(request.form["month"])
-        except ValueError:
-            return jsonify({"error": "Year and month must be valid integers"}), 400
+            # Parse date string (YYYY-MM-DD format)
+            date_str = request.form["date"]
+            from datetime import datetime
 
-        if not (1 <= month <= 12):
-            return jsonify({"error": "Month must be between 1 and 12"}), 400
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            year = date_obj.year
+            month = date_obj.month
+            day = date_obj.day
+        except ValueError:
+            return jsonify({"error": "Invalid date format. Use YYYY-MM-DD"}), 400
+
+        # Check for trimming parameters
+        trim_start = request.form.get("trimStart")
+        trim_end = request.form.get("trimEnd")
 
         audio_service = AudioService()
-        filename = audio_service.save_audio_file(
-            file, child_name, word_text, year, month
-        )
+
+        # If trimming parameters are provided, handle audio trimming
+        if trim_start is not None and trim_end is not None:
+            try:
+                start_time = float(trim_start)
+                end_time = float(trim_end)
+
+                if start_time < 0 or end_time <= start_time:
+                    return jsonify({"error": "Invalid trim times"}), 400
+
+                filename = audio_service.save_audio_file_with_trim(
+                    file, child_name, word_text, year, month, day, start_time, end_time
+                )
+            except ValueError:
+                return jsonify({"error": "Invalid trim time format"}), 400
+        else:
+            # Save without trimming
+            filename = audio_service.save_audio_file(file, child_name, word_text, year, month, day)
+
         if filename:
-            word.add_recording(year, month, filename)
+            word.add_recording(year, month, day, filename)
             data_service.save_child(child)
-            return jsonify({"year": year, "month": month, "filename": filename})
+            return jsonify({"year": year, "month": month, "day": day, "filename": filename})
         else:
             return jsonify({"error": "Failed to save audio"}), 500
 
@@ -184,9 +224,7 @@ def serve_audio(child_name, word_text, filename):
     """Serve an audio file"""
     try:
         audio_service = AudioService()
-        file_path = audio_service.get_audio_file_path(
-            child_name, word_text, filename
-        )
+        file_path = audio_service.get_audio_file_path(child_name, word_text, filename)
         if not file_path:
             return jsonify({"error": "Audio file not found"}), 404
 
@@ -210,14 +248,19 @@ def serve_image(filename):
 
 
 @api.route(
-    "/children/<child_name>/words/<word_text>/recordings/<int:year>/<int:month>",
-    methods=["DELETE"]
+    "/children/<child_name>/words/<word_text>/recordings/<int:year>/<int:month>/<int:day>",
+    methods=["DELETE"],
 )
-def delete_recording(child_name, word_text, year, month):
-    """Delete a recording for a specific month and year"""
+def delete_recording(child_name, word_text, year, month, day):
+    """Delete a recording for a specific date"""
     try:
-        if not (1 <= month <= 12):
-            return jsonify({"error": "Month must be between 1 and 12"}), 400
+        # Validate date by trying to create a date object
+        from datetime import date
+
+        try:
+            date(year, month, day)
+        except ValueError:
+            return jsonify({"error": "Invalid date"}), 400
 
         data_service = DataService()
         child = data_service.get_child(child_name)
@@ -228,18 +271,16 @@ def delete_recording(child_name, word_text, year, month):
         if not word:
             return jsonify({"error": "Word not found"}), 404
 
-        recording = word.get_recording(year, month)
+        recording = word.get_recording(year, month, day)
         if not recording:
             return jsonify({"error": "Recording not found"}), 404
 
         # Delete the audio file
         audio_service = AudioService()
-        audio_service.delete_audio_file(
-            child_name, word_text, recording.filename
-        )
+        audio_service.delete_audio_file(child_name, word_text, recording.filename)
 
         # Remove from word
-        word.remove_recording(year, month)
+        word.remove_recording(year, month, day)
         data_service.save_child(child)
 
         return jsonify({"message": "Recording deleted successfully"})
@@ -247,13 +288,9 @@ def delete_recording(child_name, word_text, year, month):
         return jsonify({"error": str(e)}), 500
 
 
-# Legacy route for backward compatibility (year only)
-@api.route(
-    "/children/<child_name>/words/<word_text>/recordings/<int:year>",
-    methods=["DELETE"]
-)
-def delete_recording_legacy(child_name, word_text, year):
-    """Delete a recording for a specific year (legacy - deletes first recording of that year)"""
+@api.route("/children/<child_name>/words/<word_text>", methods=["DELETE"])
+def delete_word(child_name, word_text):
+    """Delete a word and all its recordings and images"""
     try:
         data_service = DataService()
         child = data_service.get_child(child_name)
@@ -264,23 +301,19 @@ def delete_recording_legacy(child_name, word_text, year):
         if not word:
             return jsonify({"error": "Word not found"}), 404
 
-        # Find first recording for this year
-        year_recordings = [r for r in word.recordings if r.year == year]
-        if not year_recordings:
-            return jsonify({"error": "Recording not found"}), 404
-
-        recording = year_recordings[0]
-
-        # Delete the audio file
+        # Delete all audio files for this word
         audio_service = AudioService()
-        audio_service.delete_audio_file(
-            child_name, word_text, recording.filename
-        )
+        for recording in word.recordings:
+            audio_service.delete_audio_file(child_name, word_text, recording.filename)
 
-        # Remove from word
-        word.remove_recording(recording.year, recording.month)
+        # Delete the word image if it exists
+        image_service = ImageService()
+        image_service.delete_image_file(word_text)
+
+        # Remove the word from the child
+        child.remove_word(word_text)
         data_service.save_child(child)
 
-        return jsonify({"message": "Recording deleted successfully"})
+        return jsonify({"message": "Word deleted successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

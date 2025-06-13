@@ -186,18 +186,73 @@ body {
     border-radius: 6px;
 }
 
+/* Recording items styling */
+.recording-item {
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    border: 1px solid #dee2e6;
+}
+
+.recording-item:hover {
+    background-color: #e9ecef;
+}
+
+.recordings-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Minimalist delete button styling */
+.delete-btn {
+    font-size: 1.2rem;
+    line-height: 1;
+    color: #6c757d !important;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+    text-decoration: none !important;
+    font-weight: normal;
+}
+
+.delete-btn:hover {
+    color: #dc3545 !important;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.delete-word-btn {
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+    text-decoration: none !important;
+    font-size: 0.75rem;
+}
+
+.delete-word-btn:hover {
+    opacity: 1;
+    color: #dc3545 !important;
+}
+
+/* Word card styling */
+.word-card .delete-word-btn {
+    opacity: 0.4;
+}
+
+.word-card:hover .delete-word-btn {
+    opacity: 0.8;
+}
+
 /* Responsive improvements */
 @media (max-width: 768px) {
     .word-image {
         width: 50px;
         height: 50px;
     }
-    
+
     .word-image-placeholder {
         width: 50px;
         height: 50px;
     }
-    
+
     .year-buttons .btn {
         font-size: 0.875rem;
         padding: 0.375rem 0.75rem;

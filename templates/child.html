@@ -46,7 +46,7 @@
                                     <div class="card-body">
                                         <div class="d-flex align-items-start mb-3">
                                             {% if word.image_filename %}
-                                                <img src="{{ url_for('api.serve_image', filename=word.image_filename) }}" 
+                                                <img src="{{ url_for('api.serve_image', filename=word.image_filename) }}"
                                                      class="word-image me-3" alt="{{ word.text }}">
                                             {% else %}
                                                 <div class="word-image-placeholder me-3">
@@ -62,16 +62,24 @@
                                         {% if word.recordings %}
                                             <div class="recordings-section">
                                                 <h6 class="text-muted mb-2">Recordings:</h6>
-                                                <div class="year-buttons">
-                                                    {% for recording in word.recordings|sort(attribute='year')|sort(attribute='month') %}
-                                                        <button class="btn btn-outline-primary btn-sm me-2 mb-2 play-btn" 
-                                                                data-child="{{ child.name }}" 
-                                                                data-word="{{ word.text }}" 
-                                                                data-year="{{ recording.year }}"
-                                                                data-month="{{ recording.month }}"
-                                                                data-filename="{{ recording.filename }}">
-                                                            <i class="fas fa-play me-1"></i>{{ recording.display_date }}
-                                                        </button>
+                                                <div class="recordings-list">
+                                                    {% for recording in word.recordings|sort(attribute='year')|sort(attribute='month')|sort(attribute='day') %}
+                                                        <div class="recording-item d-flex align-items-center mb-2">
+                                                            <button class="btn btn-outline-primary btn-sm me-2 play-btn"
+                                                                    data-child="{{ child.name }}"
+                                                                    data-word="{{ word.text }}"
+                                                                    data-year="{{ recording.year }}"
+                                                                    data-month="{{ recording.month }}"
+                                                                    data-day="{{ recording.day }}"
+                                                                    data-filename="{{ recording.filename }}">
+                                                                <i class="fas fa-play me-1"></i>{{ recording.display_date }}
+                                                            </button>
+                                                            <button class="btn btn-link text-muted p-1 ms-auto delete-btn"
+                                                                    onclick="deleteRecording('{{ child.name }}', '{{ word.text }}', {{ recording.year }}, {{ recording.month }}, {{ recording.day }}, '{{ recording.display_date }}')"
+                                                                    title="Remove this recording">
+                                                                ×
+                                                            </button>
+                                                        </div>
                                                     {% endfor %}
                                                 </div>
                                             </div>
@@ -80,13 +88,17 @@
                                         {% endif %}
 
                                         <div class="mt-3">
-                                            <button class="btn btn-success btn-sm me-2" 
+                                            <button class="btn btn-success btn-sm me-2"
                                                     onclick="showAddRecordingModal('{{ word.text }}')">
                                                 <i class="fas fa-microphone me-1"></i>Add Recording
                                             </button>
-                                            <button class="btn btn-info btn-sm" 
+                                            <button class="btn btn-info btn-sm me-2"
                                                     onclick="showAddImageModal('{{ word.text }}')">
                                                 <i class="fas fa-image me-1"></i>Add Image
+                                            </button>
+                                            <button class="btn btn-link text-muted btn-sm delete-word-btn"
+                                                    onclick="deleteWord('{{ child.name }}', '{{ word.text }}')">
+                                                <small>Remove word</small>
                                             </button>
                                         </div>
                                     </div>
@@ -141,29 +153,11 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Year and Month Selection -->
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="recordingYear" class="form-label">Year</label>
-                            <input type="number" class="form-control" id="recordingYear" min="2000" max="2030" value="2025" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="recordingMonth" class="form-label">Month</label>
-                            <select class="form-control" id="recordingMonth" required>
-                                <option value="1">January</option>
-                                <option value="2">February</option>
-                                <option value="3">March</option>
-                                <option value="4">April</option>
-                                <option value="5">May</option>
-                                <option value="6" selected>June</option>
-                                <option value="7">July</option>
-                                <option value="8">August</option>
-                                <option value="9">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
-                            </select>
-                        </div>
+                    <!-- Date Selection -->
+                    <div class="mb-3">
+                        <label for="recordingDate" class="form-label">Recording Date</label>
+                        <input type="date" class="form-control" id="recordingDate" required>
+                        <div class="form-text">Select the date when this recording was made</div>
                     </div>
 
                     <!-- Recording Method Selection -->
@@ -174,7 +168,7 @@
                             <label class="btn btn-outline-primary" for="methodRecord">
                                 <i class="fas fa-microphone me-1"></i>Record Now
                             </label>
-                            
+
                             <input type="radio" class="btn-check" name="recordingMethod" id="methodUpload" value="upload">
                             <label class="btn btn-outline-primary" for="methodUpload">
                                 <i class="fas fa-upload me-1"></i>Upload File
@@ -191,7 +185,7 @@
                                 <span id="permissionMessage">Click "Start Recording" to request microphone access.</span>
                             </div>
                         </div>
-                        
+
                         <div class="text-center mb-3">
                             <button type="button" id="startRecordBtn" class="btn btn-danger btn-lg">
                                 <i class="fas fa-microphone me-2"></i>Start Recording
@@ -200,7 +194,7 @@
                                 <i class="fas fa-stop me-2"></i>Stop Recording
                             </button>
                         </div>
-                        
+
                         <div id="recordingStatus" class="alert alert-info d-none" role="alert">
                             <i class="fas fa-info-circle me-2"></i>
                             <span id="recordingStatusText">Ready to record</span>
@@ -211,7 +205,7 @@
                                 <small class="text-muted">Maximum recording time: 60 seconds</small>
                             </div>
                         </div>
-                        
+
                         <div id="playbackSection" class="d-none">
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <span class="fw-bold">Preview:</span>
@@ -227,6 +221,113 @@
                             <audio id="recordingPreview" controls class="w-100"></audio>
                             <div class="form-text mt-1">
                                 Duration: <span id="recordingDuration">0s</span>
+                            </div>
+
+                            <!-- Audio Trimming Section -->
+                            <div id="audioTrimmingSection" class="mt-3 p-3 bg-light rounded">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-cut me-2"></i>Select Audio Portion
+                                    <small class="text-muted">(Optional - trim to just the word you want)</small>
+                                </h6>
+
+                                <!-- Waveform Container -->
+                                <div id="waveformContainer" class="mb-3 position-relative bg-white rounded p-2" style="height: 120px; border: 1px solid #dee2e6;">
+                                    <canvas id="waveformCanvas" class="w-100 h-100" style="cursor: crosshair;"></canvas>
+                                    <div id="selectionOverlay" class="position-absolute top-0 bg-primary" style="opacity: 0.2; height: 100%; display: none;"></div>
+                                    <div id="playheadIndicator" class="position-absolute top-0 bg-danger" style="width: 2px; height: 100%; display: none;"></div>
+                                </div>
+
+                                <!-- Selection Controls -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="startTime" class="form-label">Start Time (seconds)</label>
+                                        <input type="number" class="form-control" id="startTime" min="0" step="0.1" value="0">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="endTime" class="form-label">End Time (seconds)</label>
+                                        <input type="number" class="form-control" id="endTime" min="0" step="0.1" value="0">
+                                    </div>
+                                </div>
+
+                                <!-- Control Buttons -->
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="button" id="playSelectionBtn" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-play me-1"></i>Play Selection
+                                    </button>
+                                    <button type="button" id="resetSelectionBtn" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-undo me-1"></i>Reset Selection
+                                    </button>
+                                    <button type="button" id="useFullAudioBtn" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-expand me-1"></i>Use Full Audio
+                                    </button>
+                                </div>
+
+                                <div class="form-text mt-2 text-center">
+                                    <small>
+                                        Click and drag on the waveform to select a portion, or use the time inputs above.
+                                        <br>
+                                        <strong>Selection:</strong> <span id="selectionInfo">Full audio (no trimming)</span>
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Preview Section (for uploaded files) -->
+                        <div id="uploadPreviewSection" class="d-none">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="fw-bold">Preview Uploaded File:</span>
+                            </div>
+                            <audio id="uploadedPreview" controls class="w-100"></audio>
+                            <div class="form-text mt-1">
+                                Duration: <span id="uploadedDuration">0s</span>
+                            </div>
+
+                            <!-- Audio Trimming Section for Uploads -->
+                            <div id="uploadTrimmingSection" class="mt-3 p-3 bg-light rounded">
+                                <h6 class="mb-3">
+                                    <i class="fas fa-cut me-2"></i>Select Audio Portion
+                                    <small class="text-muted">(Optional - trim to just the word you want)</small>
+                                </h6>
+
+                                <!-- Waveform Container for Uploads -->
+                                <div id="uploadWaveformContainer" class="mb-3 position-relative bg-white rounded p-2" style="height: 120px; border: 1px solid #dee2e6;">
+                                    <canvas id="uploadWaveformCanvas" class="w-100 h-100" style="cursor: crosshair;"></canvas>
+                                    <div id="uploadSelectionOverlay" class="position-absolute top-0 bg-primary" style="opacity: 0.2; height: 100%; display: none;"></div>
+                                    <div id="uploadPlayheadIndicator" class="position-absolute top-0 bg-danger" style="width: 2px; height: 100%; display: none;"></div>
+                                </div>
+
+                                <!-- Selection Controls for Uploads -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="uploadStartTime" class="form-label">Start Time (seconds)</label>
+                                        <input type="number" class="form-control" id="uploadStartTime" min="0" step="0.1" value="0">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="uploadEndTime" class="form-label">End Time (seconds)</label>
+                                        <input type="number" class="form-control" id="uploadEndTime" min="0" step="0.1" value="0">
+                                    </div>
+                                </div>
+
+                                <!-- Control Buttons for Uploads -->
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="button" id="playUploadSelectionBtn" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-play me-1"></i>Play Selection
+                                    </button>
+                                    <button type="button" id="resetUploadSelectionBtn" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-undo me-1"></i>Reset Selection
+                                    </button>
+                                    <button type="button" id="useFullUploadBtn" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-expand me-1"></i>Use Full Audio
+                                    </button>
+                                </div>
+
+                                <div class="form-text mt-2 text-center">
+                                    <small>
+                                        Click and drag on the waveform to select a portion, or use the time inputs above.
+                                        <br>
+                                        <strong>Selection:</strong> <span id="uploadSelectionInfo">Full audio (no trimming)</span>
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -284,13 +385,18 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
         let currentWord = '';
-        
+
         function showAddRecordingModal(wordText) {
             currentWord = wordText;
             document.getElementById('addRecordingModal').querySelector('.modal-title').textContent = `Add Recording for "${wordText}"`;
+
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('recordingDate').value = today;
+
             new bootstrap.Modal(document.getElementById('addRecordingModal')).show();
         }
-        
+
         function showAddImageModal(wordText) {
             currentWord = wordText;
             document.getElementById('addImageModal').querySelector('.modal-title').textContent = `Add Image for "${wordText}"`;

@@ -1,8 +1,10 @@
 import os
 from typing import Optional
+
+from PIL import Image
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
-from PIL import Image
+
 from config import Config
 
 
@@ -16,10 +18,7 @@ class ImageService:
 
     def _allowed_file(self, filename: str) -> bool:
         """Check if file extension is allowed"""
-        return (
-            "." in filename and
-            filename.rsplit(".", 1)[1].lower() in self.allowed_extensions
-        )
+        return "." in filename and filename.rsplit(".", 1)[1].lower() in self.allowed_extensions
 
     def _get_image_path(self, word: str, extension: str) -> str:
         """Get the full path for an image file"""
@@ -33,8 +32,7 @@ class ImageService:
 
         if not self._allowed_file(file.filename):
             raise ValueError(
-                f"File type not allowed. Allowed types: "
-                f"{', '.join(self.allowed_extensions)}"
+                f"File type not allowed. Allowed types: " f"{', '.join(self.allowed_extensions)}"
             )
 
         # Check file size
@@ -44,9 +42,7 @@ class ImageService:
 
         if file_size > self.max_file_size:
             max_size_mb = self.max_file_size / 1024 / 1024
-            raise ValueError(
-                f"File too large. Maximum size: {max_size_mb:.1f}MB"
-            )
+            raise ValueError(f"File too large. Maximum size: {max_size_mb:.1f}MB")
 
         # Get file extension
         extension = file.filename.rsplit(".", 1)[1].lower()
@@ -67,9 +63,7 @@ class ImageService:
                 # Resize if too large (max 800px on longest side)
                 max_size = 800
                 if max(img.size) > max_size:
-                    img.thumbnail(
-                        (max_size, max_size), Image.Resampling.LANCZOS
-                    )
+                    img.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
 
                 # Save with optimization
                 if extension.lower() in ("jpg", "jpeg"):

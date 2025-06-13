@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Optional
+
 from .word import Word
 
 
@@ -33,15 +34,10 @@ class Child:
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization"""
-        return {
-            "name": self.name,
-            "words": [word.to_dict() for word in self.words]
-        }
+        return {"name": self.name, "words": [word.to_dict() for word in self.words]}
 
     @classmethod
     def from_dict(cls, data: dict) -> "Child":
         """Create Child instance from dictionary"""
-        words = [
-            Word.from_dict(word_data) for word_data in data.get("words", [])
-        ]
+        words = [Word.from_dict(word_data) for word_data in data.get("words", [])]
         return cls(name=data["name"], words=words)

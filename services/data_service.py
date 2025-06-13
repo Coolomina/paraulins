@@ -1,16 +1,24 @@
 import json
 import os
 from typing import List, Optional
+
+from flask import current_app
+
+from config import Config
 from models.child import Child
 from models.word import Word
-from config import Config
 
 
 class DataService:
     """Service for managing application data persistence"""
 
     def __init__(self):
-        self.data_file = Config.DATA_FILE
+        # Use Flask app config if available, otherwise fallback to Config class
+        try:
+            self.data_file = current_app.config["DATA_FILE"]
+        except RuntimeError:
+            # No app context, use default config
+            self.data_file = Config.DATA_FILE
         self._ensure_data_file_exists()
 
     def _ensure_data_file_exists(self) -> None:
@@ -35,10 +43,7 @@ class DataService:
     def get_children(self) -> List[Child]:
         """Get all children"""
         data = self.load_data()
-        return [
-            Child.from_dict(child_data)
-            for child_data in data.get("children", [])
-        ]
+        return [Child.from_dict(child_data) for child_data in data.get("children", [])]
 
     def get_child(self, name: str) -> Optional[Child]:
         """Get a specific child by name"""
@@ -83,14 +88,14 @@ class DataService:
         return False
 
     def add_recording_to_word(
-        self, child_name: str, word_text: str, year: int, filename: str
+        self, child_name: str, word_text: str, year: int, month: int, day: int, filename: str
     ) -> bool:
         """Add a recording to a word"""
         child = self.get_child(child_name)
         if child:
             word = child.get_word(word_text)
             if word:
-                word.add_recording(year, filename)
+                word.add_recording(year, month, day, filename)
                 self.save_child(child)
                 return True
         return False

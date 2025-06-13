@@ -1,6 +1,6 @@
 from models.child import Child
-from models.word import Word
 from models.recording import Recording
+from models.word import Word
 
 
 class TestChild:
@@ -66,7 +66,7 @@ class TestChild:
     def test_to_dict(self):
         child = Child("Grace")
         word = Word("cat")
-        word.add_recording(2023, "cat_2023.mp3")
+        word.add_recording(2023, 6, 15, "cat_2023.mp3")
         child.add_word(word)
 
         data = child.to_dict()
@@ -116,62 +116,66 @@ class TestWord:
 
     def test_add_recording(self):
         word = Word("mama")
-        word.add_recording(2023, "mama_2023.mp3")
+        word.add_recording(2023, 6, 15, "mama_2023.mp3")
 
         assert len(word.recordings) == 1
         assert word.recordings[0].year == 2023
+        assert word.recordings[0].month == 6
+        assert word.recordings[0].day == 15
         assert word.recordings[0].filename == "mama_2023.mp3"
 
     def test_add_multiple_recordings(self):
         word = Word("papa")
-        word.add_recording(2022, "papa_2022.mp3")
-        word.add_recording(2023, "papa_2023.mp3")
-        word.add_recording(2021, "papa_2021.mp3")
+        word.add_recording(2022, 3, 10, "papa_2022.mp3")
+        word.add_recording(2023, 6, 15, "papa_2023.mp3")
+        word.add_recording(2021, 12, 25, "papa_2021.mp3")
 
         assert len(word.recordings) == 3
-        # Should be sorted by year
+        # Should be sorted by year, month, day
         years = [r.year for r in word.recordings]
         assert years == [2021, 2022, 2023]
 
     def test_replace_recording(self):
         word = Word("water")
-        word.add_recording(2023, "water_2023_v1.mp3")
-        word.add_recording(2023, "water_2023_v2.mp3")
+        word.add_recording(2023, 6, 15, "water_2023_v1.mp3")
+        word.add_recording(2023, 6, 15, "water_2023_v2.mp3")  # Same date, should replace
 
         assert len(word.recordings) == 1
         assert word.recordings[0].filename == "water_2023_v2.mp3"
 
     def test_get_recording(self):
         word = Word("book")
-        word.add_recording(2022, "book_2022.mp3")
-        word.add_recording(2023, "book_2023.mp3")
+        word.add_recording(2022, 3, 10, "book_2022.mp3")
+        word.add_recording(2023, 6, 15, "book_2023.mp3")
 
-        recording = word.get_recording(2022)
+        recording = word.get_recording(2022, 3, 10)
         assert recording is not None
         assert recording.year == 2022
+        assert recording.month == 3
+        assert recording.day == 10
         assert recording.filename == "book_2022.mp3"
 
-        not_found = word.get_recording(2024)
+        not_found = word.get_recording(2024, 1, 1)
         assert not_found is None
 
     def test_remove_recording(self):
         word = Word("cat")
-        word.add_recording(2023, "cat_2023.mp3")
+        word.add_recording(2023, 6, 15, "cat_2023.mp3")
 
         assert len(word.recordings) == 1
 
-        removed = word.remove_recording(2023)
+        removed = word.remove_recording(2023, 6, 15)
         assert removed is True
         assert len(word.recordings) == 0
 
-        not_removed = word.remove_recording(2023)
+        not_removed = word.remove_recording(2023, 6, 15)
         assert not_removed is False
 
     def test_get_years(self):
         word = Word("dog")
-        word.add_recording(2023, "dog_2023.mp3")
-        word.add_recording(2021, "dog_2021.mp3")
-        word.add_recording(2022, "dog_2022.mp3")
+        word.add_recording(2023, 6, 15, "dog_2023.mp3")
+        word.add_recording(2021, 3, 10, "dog_2021.mp3")
+        word.add_recording(2022, 12, 25, "dog_2022.mp3")
 
         years = word.get_years()
         assert years == [2021, 2022, 2023]
@@ -184,8 +188,8 @@ class TestWord:
 
     def test_to_dict(self):
         word = Word("fish", "fish.jpg")
-        word.add_recording(2022, "fish_2022.mp3")
-        word.add_recording(2023, "fish_2023.mp3")
+        word.add_recording(2022, 3, 10, "fish_2022.mp3")
+        word.add_recording(2023, 6, 15, "fish_2023.mp3")
 
         data = word.to_dict()
 
@@ -218,15 +222,19 @@ class TestRecording:
     """Test the Recording model"""
 
     def test_recording_creation(self):
-        recording = Recording(2023, "hello_2023.mp3")
+        recording = Recording(2023, 6, 15, "hello_2023.mp3")
         assert recording.year == 2023
+        assert recording.month == 6
+        assert recording.day == 15
         assert recording.filename == "hello_2023.mp3"
 
     def test_to_dict(self):
-        recording = Recording(2022, "world_2022.wav")
+        recording = Recording(2022, 3, 10, "world_2022.wav")
         data = recording.to_dict()
 
         assert data["year"] == 2022
+        assert data["month"] == 3
+        assert data["day"] == 10
         assert data["filename"] == "world_2022.wav"
 
     def test_from_dict(self):

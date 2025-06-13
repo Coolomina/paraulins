@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template
+
 from services.data_service import DataService
 
 web = Blueprint("web", __name__)
