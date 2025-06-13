@@ -184,7 +184,7 @@ async function addImage(childName) {
 }
 
 // Audio playback
-function playAudio(childName, wordText, year, filename) {
+function playAudio(childName, wordText, year, month, filename) {
     const button = event.target.closest('.play-btn');
     
     // Stop current audio if playing
@@ -193,14 +193,16 @@ function playAudio(childName, wordText, year, filename) {
         currentAudio.currentTime = 0;
         if (currentPlayButton) {
             currentPlayButton.classList.remove('playing');
-            currentPlayButton.innerHTML = '<i class="fas fa-play me-1"></i>' + currentPlayButton.textContent.trim();
+            const originalText = currentPlayButton.textContent.trim();
+            currentPlayButton.innerHTML = '<i class="fas fa-play me-1"></i>' + originalText.replace('⏸️', '');
         }
     }
     
     // If clicking the same button that was playing, just stop
     if (currentPlayButton === button && button.classList.contains('playing')) {
         button.classList.remove('playing');
-        button.innerHTML = '<i class="fas fa-play me-1"></i>' + year;
+        const originalText = button.textContent.trim();
+        button.innerHTML = '<i class="fas fa-play me-1"></i>' + originalText.replace('⏸️', '');
         currentPlayButton = null;
         currentAudio = null;
         return;
@@ -212,19 +214,22 @@ function playAudio(childName, wordText, year, filename) {
     
     // Update button state
     button.classList.add('playing');
-    button.innerHTML = '<i class="fas fa-pause me-1"></i>' + year;
+    const originalText = button.textContent.trim();
+    button.innerHTML = '<i class="fas fa-pause me-1"></i>' + originalText.replace('▶️', '');
     
     // Set up event listeners
     currentAudio.onended = () => {
         button.classList.remove('playing');
-        button.innerHTML = '<i class="fas fa-play me-1"></i>' + year;
+        const originalText = button.textContent.trim();
+        button.innerHTML = '<i class="fas fa-play me-1"></i>' + originalText.replace('⏸️', '');
         currentPlayButton = null;
         currentAudio = null;
     };
     
     currentAudio.onerror = () => {
         button.classList.remove('playing');
-        button.innerHTML = '<i class="fas fa-play me-1"></i>' + year;
+        const originalText = button.textContent.trim();
+        button.innerHTML = '<i class="fas fa-play me-1"></i>' + originalText.replace('⏸️', '');
         showAlert('Failed to play audio file', 'danger');
         currentPlayButton = null;
         currentAudio = null;
@@ -235,7 +240,8 @@ function playAudio(childName, wordText, year, filename) {
         console.error('Audio playback failed:', error);
         showAlert('Failed to play audio file', 'danger');
         button.classList.remove('playing');
-        button.innerHTML = '<i class="fas fa-play me-1"></i>' + year;
+        const originalText = button.textContent.trim();
+        button.innerHTML = '<i class="fas fa-play me-1"></i>' + originalText.replace('⏸️', '');
         currentPlayButton = null;
         currentAudio = null;
     });
@@ -255,9 +261,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const childName = button.dataset.child;
             const wordText = button.dataset.word;
             const year = button.dataset.year;
+            const month = button.dataset.month || '1'; // Default to January for legacy data
             const filename = button.dataset.filename;
             
-            playAudio(childName, wordText, year, filename);
+            playAudio(childName, wordText, year, month, filename);
         }
     });
     
@@ -728,10 +735,17 @@ function resetRecordingState() {
 // Updated save recording function
 async function saveRecording(childName) {
     const yearInput = document.getElementById('recordingYear');
+    const monthInput = document.getElementById('recordingMonth');
     const year = parseInt(yearInput.value);
+    const month = parseInt(monthInput.value);
     
     if (!year || year < 2000 || year > 2030) {
         showAlert('Please enter a valid year', 'warning');
+        return;
+    }
+    
+    if (!month || month < 1 || month > 12) {
+        showAlert('Please select a valid month', 'warning');
         return;
     }
     
@@ -748,10 +762,10 @@ async function saveRecording(childName) {
                 return;
             }
             
-            await saveRecordedAudio(childName, year, audioRecorder.getRecordedBlob());
+            await saveRecordedAudio(childName, year, month, audioRecorder.getRecordedBlob());
         } else {
             // Handle file upload (existing functionality)
-            await saveUploadedAudio(childName, year);
+            await saveUploadedAudio(childName, year, month);
         }
     } catch (error) {
         showAlert(`Failed to save recording: ${error.message}`, 'danger');
@@ -760,7 +774,7 @@ async function saveRecording(childName) {
     }
 }
 
-async function saveRecordedAudio(childName, year, audioBlob) {
+async function saveRecordedAudio(childName, year, month, audioBlob) {
     const formData = new FormData();
     
     // Determine file extension based on mime type
@@ -777,11 +791,12 @@ async function saveRecordedAudio(childName, year, audioBlob) {
         extension = 'wav';
     }
     
-    const fileName = `recording_${year}.${extension}`;
+    const fileName = `recording_${year}-${month.toString().padStart(2, '0')}.${extension}`;
     const audioFile = new File([audioBlob], fileName, { type: audioBlob.type });
     
     formData.append('audio', audioFile);
     formData.append('year', year.toString());
+    formData.append('month', month.toString());
     
     const response = await fetch(`/api/children/${encodeURIComponent(childName)}/words/${encodeURIComponent(currentWord)}/recordings`, {
         method: 'POST',
@@ -793,7 +808,8 @@ async function saveRecordedAudio(childName, year, audioBlob) {
         throw new Error(error.error || 'Upload failed');
     }
     
-    showAlert(`Recording for ${year} has been saved successfully!`, 'success');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    showAlert(`Recording for ${monthNames[month - 1]} ${year} has been saved successfully!`, 'success');
     
     // Close modal and reset
     bootstrap.Modal.getInstance(document.getElementById('addRecordingModal')).hide();
@@ -803,7 +819,7 @@ async function saveRecordedAudio(childName, year, audioBlob) {
     setTimeout(() => window.location.reload(), 1000);
 }
 
-async function saveUploadedAudio(childName, year) {
+async function saveUploadedAudio(childName, year, month) {
     const fileInput = document.getElementById('recordingFile');
     const file = fileInput.files[0];
     
@@ -815,6 +831,7 @@ async function saveUploadedAudio(childName, year) {
     const formData = new FormData();
     formData.append('audio', file);
     formData.append('year', year.toString());
+    formData.append('month', month.toString());
     
     const response = await fetch(`/api/children/${encodeURIComponent(childName)}/words/${encodeURIComponent(currentWord)}/recordings`, {
         method: 'POST',
@@ -826,7 +843,8 @@ async function saveUploadedAudio(childName, year) {
         throw new Error(error.error || 'Upload failed');
     }
     
-    showAlert(`Recording for ${year} has been uploaded successfully!`, 'success');
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    showAlert(`Recording for ${monthNames[month - 1]} ${year} has been uploaded successfully!`, 'success');
     
     // Close modal and reset
     bootstrap.Modal.getInstance(document.getElementById('addRecordingModal')).hide();
@@ -837,8 +855,11 @@ async function saveUploadedAudio(childName, year) {
 }
 
 function resetRecordingModal() {
-    // Reset form
-    document.getElementById('recordingYear').value = '2025';
+    // Reset form - set to current date
+    const now = new Date();
+    document.getElementById('recordingYear').value = now.getFullYear();
+    document.getElementById('recordingMonth').value = now.getMonth() + 1; // getMonth() returns 0-11
+    
     const fileInput = document.getElementById('recordingFile');
     if (fileInput) fileInput.value = '';
     

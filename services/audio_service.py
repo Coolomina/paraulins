@@ -21,17 +21,27 @@ class AudioService:
         )
 
     def _get_audio_path(
-        self, child_name: str, word: str, year: int, extension: str
+        self, child_name: str, word: str, year: int, month: int, extension: str
     ) -> str:
         """Get the full path for an audio file"""
+        child_dir = os.path.join(self.audio_dir, secure_filename(child_name))
+        word_dir = os.path.join(child_dir, secure_filename(word))
+        os.makedirs(word_dir, exist_ok=True)
+        return os.path.join(word_dir, f"{year}-{month:02d}.{extension}")
+
+    def _get_audio_path_legacy(
+        self, child_name: str, word: str, year: int, extension: str
+    ) -> str:
+        """Get the full path for an audio file (legacy format)"""
         child_dir = os.path.join(self.audio_dir, secure_filename(child_name))
         word_dir = os.path.join(child_dir, secure_filename(word))
         os.makedirs(word_dir, exist_ok=True)
         return os.path.join(word_dir, f"{year}.{extension}")
 
     def save_audio_file(
-        self, file: FileStorage, child_name: str, word: str, year: int
+        self, file: FileStorage, child_name: str, word: str, year: int, month: int = 1
     ) -> Optional[str]:
+        """Save an audio file and return the filename"""
         """Save an audio file and return the filename"""
         if not file or not file.filename:
             return None
@@ -57,13 +67,13 @@ class AudioService:
         extension = file.filename.rsplit(".", 1)[1].lower()
 
         # Create the file path
-        file_path = self._get_audio_path(child_name, word, year, extension)
+        file_path = self._get_audio_path(child_name, word, year, month, extension)
 
         # Save the file
         file.save(file_path)
 
         # Return just the filename for storage in data
-        return f"{year}.{extension}"
+        return f"{year}-{month:02d}.{extension}"
 
     def get_audio_file_path(
         self, child_name: str, word: str, filename: str

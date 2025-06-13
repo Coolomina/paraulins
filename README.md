@@ -5,11 +5,11 @@ A webapp to track and listen to the evolution of your children's pronunciation o
 ## Features
 
 - Select between your two daughters
-- Manage words for each child with audio recordings by year
+- Manage words for each child with audio recordings by **month and year**
 - **Browser-based recording**: Record directly in your browser with microphone access
 - **File upload option**: Upload pre-recorded audio files
 - Attach images to words for easy recognition
-- Play audio recordings organized by year
+- Play audio recordings organized chronologically
 - File-based storage (no database required)
 
 ### Recording Options
@@ -26,6 +26,15 @@ The app provides two convenient ways to add audio recordings:
 2. **Upload File**: Upload pre-recorded audio files
    - Supports MP3, WAV, OGG, M4A, and WebM formats
    - Maximum file size: 10MB
+
+### Monthly Tracking
+
+Recordings are now organized by **month and year** instead of just year, giving you much better granularity to track pronunciation evolution. You can:
+
+- Record multiple times per year
+- See progression month by month
+- Compare recordings from the same month across different years
+- Default to current month when adding new recordings
 
 ## Quick Start
 

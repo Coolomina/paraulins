@@ -61,15 +61,16 @@
 
                                         {% if word.recordings %}
                                             <div class="recordings-section">
-                                                <h6 class="text-muted mb-2">Years:</h6>
+                                                <h6 class="text-muted mb-2">Recordings:</h6>
                                                 <div class="year-buttons">
-                                                    {% for recording in word.recordings|sort(attribute='year') %}
+                                                    {% for recording in word.recordings|sort(attribute='year')|sort(attribute='month') %}
                                                         <button class="btn btn-outline-primary btn-sm me-2 mb-2 play-btn" 
                                                                 data-child="{{ child.name }}" 
                                                                 data-word="{{ word.text }}" 
                                                                 data-year="{{ recording.year }}"
+                                                                data-month="{{ recording.month }}"
                                                                 data-filename="{{ recording.filename }}">
-                                                            <i class="fas fa-play me-1"></i>{{ recording.year }}
+                                                            <i class="fas fa-play me-1"></i>{{ recording.display_date }}
                                                         </button>
                                                     {% endfor %}
                                                 </div>
@@ -140,10 +141,29 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Year Selection (always visible) -->
-                    <div class="mb-3">
-                        <label for="recordingYear" class="form-label">Year</label>
-                        <input type="number" class="form-control" id="recordingYear" min="2000" max="2030" value="2025" required>
+                    <!-- Year and Month Selection -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="recordingYear" class="form-label">Year</label>
+                            <input type="number" class="form-control" id="recordingYear" min="2000" max="2030" value="2025" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="recordingMonth" class="form-label">Month</label>
+                            <select class="form-control" id="recordingMonth" required>
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6" selected>June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Recording Method Selection -->
