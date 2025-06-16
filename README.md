@@ -1,10 +1,14 @@
 # 🎙️ Paraulins - Pronunciation Evolution Tracker
 
-Track your children's pronunciation evolution over time with this modern web application. Record, upload, and organize audio recordings with visual waveform editing.
+Track your children's pronunciation evolution over time with this cozy web application. Record, upload, and organize audio recordings with visual waveform editing.
 
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://python.org)
 [![Flask](https://img.shields.io/badge/flask-2.3+-green.svg)](https://flask.palletsprojects.com/)
 [![Docker](https://img.shields.io/badge/docker-supported-blue.svg)](https://docker.com)
+
+## 📺 Screenshot
+
+![screenshot](img/image.png "Screenshot of Paraulins application")
 
 ## ✨ Key Features
 
